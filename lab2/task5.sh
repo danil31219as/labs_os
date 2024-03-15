@@ -12,16 +12,24 @@ calculate_mean() {
 }
 
 input_file="task4_output.txt"
-
+last_ppid=0
+sum=0
+count=0
 while IFS= read -r line; do
     pid=$(echo "$line" | awk -F'[: ]+' '{print $2}')
     ppid=$(echo "$line" | awk -F'[: ]+' '{print $4}')
     art=$(echo "$line" | awk -F'[: ]+' '{print $6}')
-
-    grouped_art["$ppid"]+=" $art"
+    if [$ppid -eq $last_ppid]; then 
+        sum=$((sum + art)) 
+        count=$((count + 1))
+    else 
+        mean=$(echo "scale=2; $sum / $count" | bc)
+        echo "PPID=$ppid : ART=$mean" >> "task5_output.txt"
+        last_ppid=$ppid 
+        sum=$art 
+        count=1;
+    fi
+    
 done < "$input_file"
-
-for ppid in "${!grouped_art[@]}"; do
-    mean=$(calculate_mean ${grouped_art["$ppid"]})
-    echo "PPID=$ppid : ART=$mean" >> "task5_output.txt"
-done
+mean=$(echo "scale=2; $sum / $count" | bc)
+echo "PPID=$ppid : ART=$mean" >> "task5_output.txt"
